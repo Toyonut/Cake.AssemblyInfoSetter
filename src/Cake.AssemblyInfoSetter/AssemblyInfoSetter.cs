@@ -1,19 +1,27 @@
 ﻿using Cake.Core;
 using Cake.Core.IO;
 using Cake.Core.Annotations;
+using System.Collections.Concurrent;
 
-namespace Cake.AssemblyInfoSetter;
-
-[CakeAliasCategory("AssemblyInfoSetter")]
-public static class AssemblyInfoSetter
+namespace Cake.AssemblyInfoSetter 
 {
-    [CakeMethodAlias]
-    public static void SetAssemblyInfo(this ICakeContext context, string globPattern) 
+    [CakeAliasCategory("AssemblyInfoSetter")]
+    public static class AssemblyInfoSetter
     {
-        var files = context.Globber.GetFiles(globPattern);
+        [CakeMethodAlias]
+        public static FilePath[] SetAssemblyInfo(this ICakeContext context, string globPattern, string version)
+        {
+            var files = context.Globber.GetFiles(globPattern);
 
-        foreach (var file in files) {
-            Console.WriteLine(file.FullPath.ToString());
+            var results = new ConcurrentBag<FilePath>();
+
+            Parallel.ForEach (files, file => {
+                var replacer = new AssemblyInfoReplacer(context, new Version(version), file.FullPath);
+
+                replacer.AssemblyFileVersion.replace();                
+            });
+
+            return results.ToArray();
         }
     }
 }

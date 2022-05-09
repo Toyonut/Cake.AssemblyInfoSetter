@@ -10,7 +10,12 @@ var configuration = Argument("configuration", "Release");
 Task("Test")
     .Does(() =>
 {
-    SetAssemblyInfo("**/*.cs");
+   var res = SetAssemblyInfo("**/AssemblyInfo.cs", "1.0.0.0");
+
+   foreach (var r in res)
+   {
+       Information(r);
+   }
 });
 
 //////////////////////////////////////////////////////////////////////
