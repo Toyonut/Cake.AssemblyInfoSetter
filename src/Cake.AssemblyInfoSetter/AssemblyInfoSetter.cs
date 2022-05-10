@@ -16,9 +16,9 @@ namespace Cake.AssemblyInfoSetter
             var results = new ConcurrentBag<FilePath>();
 
             Parallel.ForEach (files, file => {
-                var replacer = new AssemblyInfoReplacer(context, new Version(version), file.FullPath);
-
-                replacer.AssemblyFileVersion.replace();                
+                var replacer = new AssemblyInfoReplacer(context, file.FullPath, new Version(version));
+                var fileReplacementPath = replacer.Replace();
+                results.Add(fileReplacementPath);
             });
 
             return results.ToArray();

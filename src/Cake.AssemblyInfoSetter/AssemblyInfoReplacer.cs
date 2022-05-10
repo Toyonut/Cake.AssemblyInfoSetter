@@ -1,32 +1,45 @@
 using Cake.Core;
 using Cake.Core.IO;
+using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace Cake.AssemblyInfoSetter
 {
     public class AssemblyInfoReplacer
     {
-        private Version _version;
+        private Dictionary<string, Dictionary<string, string>> replacementsTable = new Dictionary<string, Dictionary<string, string>> {
+            {
+                "AssemblyFileVersion", new Dictionary<string, string> {
+                    {"RegexMatch", @"\[assembly:\s+AssemblyFileVersion\(\""[\d|\.]*\""\)\]"},
+                    {"Replacement", "[assembly: AssemblyFileVersion(\"{0}\")]"}
+                }
+            }
+        };
 
+        private Version _version;
         private FilePath _filePath;
         private ICakeContext _context;
 
-        public AssemblyInfoReplacement AssemblyFileVersion {get; private set;}
-
-        public AssemblyInfoReplacer(ICakeContext context, Version version, FilePath filePath)
+        public AssemblyInfoReplacer(ICakeContext context, FilePath filePath, Version version)
         {
             _version = version;
-
             _filePath = filePath;
-
             _context = context;
+        }
 
-            AssemblyFileVersion = new AssemblyInfoReplacement (
-                context = _context,
-                filePath = _filePath,
-                version = _version,
-                @"\[assembly:\s+AssemblyFileVersion\(\""[\d|\.]*\""\)\]",
-                $"[assembly: AssemblyFileVersion(\"{_version}\")]"
+        public FilePath Replace () {
+            var absolutePath = _filePath.MakeAbsolute(_context.Environment);
+            var fileText = File.ReadAllText(absolutePath.ToString());
+
+            var updatedFile = Regex.Replace(
+                fileText, 
+                replacementsTable["AssemblyFileVersion"]["RegexMatch"],
+                String.Format(replacementsTable["AssemblyFileVersion"]["Replacement"], _version)
             );
+
+            File.WriteAllText(absolutePath.ToString(), updatedFile);
+
+            return _filePath;
         }
     }
 }
