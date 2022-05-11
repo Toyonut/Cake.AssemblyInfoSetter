@@ -29,9 +29,9 @@ namespace Cake.AssemblyInfoSetter
 
             foreach (var prop in setAssemblyProperties)
             {
-                var propertyRegex = @"\[assembly:\s+@@propName\(\""[\d|\.]*\""\)\]".Replace("@@propName", prop.Name);
+                var propertyRegex = $@"\[assembly:\s+{prop.Name}\(\"".*\""\)\]";
                 var propValue = prop.GetValue(_properties, null);
-                var replacement = $"[assembly: {prop.Name}(\"{propValue}\")]";
+                var replacement = $@"[assembly: {prop.Name}(""{propValue}"")]";
 
                 fileText = Regex.Replace(fileText, propertyRegex, replacement);
             }
