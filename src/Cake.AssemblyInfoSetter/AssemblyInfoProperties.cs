@@ -2,6 +2,7 @@ namespace Cake.AssemblyInfoSetter
 {
     public struct AssemblyInfoProperties
     {
+        public string? AssemblyTitle {get; set;}
         public string? AssemblyCompany {get; set;}
         public string? AssemblyCopyright {get; set;}
         public string? AssemblyVersion {get; set;}
