@@ -9,14 +9,14 @@ namespace Cake.AssemblyInfoSetter
     public static class AssemblyInfoSetter
     {
         [CakeMethodAlias]
-        public static FilePath[] SetAssemblyInfo(this ICakeContext context, string globPattern, string assemblyInfoField, string replacementValue)
+        public static FilePath[] SetAssemblyInfo(this ICakeContext context, string globPattern, AssemblyInfoProperties properties)
         {
             var files = context.Globber.GetFiles(globPattern);
 
             var results = new ConcurrentBag<FilePath>();
 
             Parallel.ForEach (files, file => {
-                var replacer = new AssemblyInfoReplacer(context, file.FullPath, assemblyInfoField, replacementValue);
+                var replacer = new AssemblyInfoReplacer(context, file.FullPath, properties);
                 var fileReplacementPath = replacer.Replace();
                 results.Add(fileReplacementPath);
             });

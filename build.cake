@@ -10,7 +10,10 @@ var configuration = Argument("configuration", "Release");
 Task("Test")
     .Does(() =>
 {
-   var res = SetAssemblyInfo("**/AssemblyInfo.cs", "1.0.0.0");
+   var res = SetAssemblyInfo("**/AssemblyInfo.cs", new AssemblyInfoProperties () {
+       AssemblyFileVersion = "1.2.0.9",
+       AssemblyVersion = "1.2.0.9"
+   });
 
    foreach (var r in res)
    {

@@ -6,35 +6,15 @@ namespace Cake.AssemblyInfoSetter
 {
     public class AssemblyInfoReplacer
     {
-        private Dictionary<string, Dictionary<string, string>> replacementsTable = new Dictionary<string, Dictionary<string, string>> {
-            {
-                "AssemblyFileVersion", new Dictionary<string, string> 
-                {
-                    {"RegexMatch", @"\[assembly:\s+AssemblyFileVersion\(\""[\d|\.]*\""\)\]"},
-                    {"Replacement", "[assembly: AssemblyFileVersion(\"{0}\")]"}
-                }
-            }
-        };
-
         private ICakeContext _context;
         private FilePath _filePath;
-        private string _assemblyInfoField;
-        private string _replacementValue;
+        private AssemblyInfoProperties _properties;
 
-        public AssemblyInfoReplacer(ICakeContext context, FilePath filePath, string assemblyInfoField, string replacementValue)
+        public AssemblyInfoReplacer(ICakeContext context, FilePath filePath, AssemblyInfoProperties properties)
         {
-            if (replacementsTable.ContainsKey(assemblyInfoField)) 
-            {
-                _assemblyInfoField = assemblyInfoField;
-            }
-            else
-            {
-                throw new ArgumentException($"AssemblyInfo field {assemblyInfoField} is not valid.");
-            }
-
             _context = context;
             _filePath = filePath;
-            _replacementValue = replacementValue;
+            _properties = properties;
         }
 
         public FilePath Replace () 
@@ -42,13 +22,21 @@ namespace Cake.AssemblyInfoSetter
             var absolutePath = _filePath.MakeAbsolute(_context.Environment);
             var fileText = File.ReadAllText(absolutePath.ToString());
 
-            var updatedFile = Regex.Replace(
-                fileText, 
-                replacementsTable[_assemblyInfoField]["RegexMatch"],
-                String.Format(replacementsTable[_assemblyInfoField]["Replacement"], _replacementValue)
-            );
+            var setAssemblyProperties = _properties
+                                .GetType()
+                                .GetProperties()
+                                .Where(p => p.GetValue(_properties, null) is not null);
 
-            File.WriteAllText(absolutePath.ToString(), updatedFile);
+            foreach (var prop in setAssemblyProperties)
+            {
+                var propertyRegex = @"\[assembly:\s+@@propName\(\""[\d|\.]*\""\)\]".Replace("@@propName", prop.Name);
+                var propValue = prop.GetValue(_properties, null);
+                var replacement = $"[assembly: {prop.Name}(\"{propValue}\")]";
+
+                fileText = Regex.Replace(fileText, propertyRegex, replacement);
+            }
+
+            File.WriteAllText(absolutePath.ToString(), fileText);
 
             return _filePath;
         }
