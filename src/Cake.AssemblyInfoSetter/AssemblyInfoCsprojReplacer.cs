@@ -1,6 +1,7 @@
 using Cake.Core;
 using Cake.Core.IO;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace Cake.AssemblyInfoSetter
 {
@@ -8,12 +9,12 @@ namespace Cake.AssemblyInfoSetter
     {
         public Dictionary<string, string> PropertiesDictionary;
         private string FilePath;
-        public string FileText;
+        public XmlDocument XmlCsproj;
 
         public AssemblyInfoCsprojReplacer(ICakeContext context, FilePath filePath, AssemblyInfoProperties properties)
         {
             FilePath = filePath.MakeAbsolute(context.Environment).ToString();
-            FileText = GetFileText(FilePath);
+            XmlCsproj = LoadCsproj(FilePath);
             PropertiesDictionary = ConvertPropertiesToDictionary(properties);
         }
 
@@ -32,34 +33,52 @@ namespace Cake.AssemblyInfoSetter
             return propertiesDictionary;
         }
 
-        public string GetFileText(string absoluteFilePath)
+        public XmlDocument LoadCsproj(string absoluteFilePath)
         {
-            return File.ReadAllText(absoluteFilePath);
+            var doc = new XmlDocument();
+
+            try 
+            {
+                doc.Load(absoluteFilePath); 
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                throw;
+            }
+            
+            return doc;
         }
 
-        public string ReplaceProperties(string assemblyInfoText, Dictionary<string, string> assemblyInfoProperties)
+        public XmlDocument ReplaceProperties(XmlDocument csproj, Dictionary<string, string> assemblyInfoProperties)
         {
             foreach (var prop in assemblyInfoProperties)
             {
                 var propertyRegex = $@"\[assembly:\s+{prop.Key}\(\"".*\""\)\]";
                 var replacement = $@"[assembly: {prop.Key}(""{prop.Value}"")]";
-
-                assemblyInfoText = Regex.Replace(assemblyInfoText, propertyRegex, replacement);
             }
 
-            return assemblyInfoText;
+            return csproj;
         }
 
-        public FilePath Replace () {
-            this.FileText = ReplaceProperties(this.FileText, this.PropertiesDictionary);
-            SetFileText(this.FilePath, this.FileText);
-            
-            return this.FilePath;
-        }
-
-        public string SetFileText(string absoluteFilePath, string FileText)
+        public string Replace () 
         {
-            File.WriteAllText(FileText, FileText);
+            this.XmlCsproj = ReplaceProperties(this.XmlCsproj, this.PropertiesDictionary);
+            var path = SetFileText(this.FilePath, this.XmlCsproj);
+            
+            return path;
+        }
+
+        public string SetFileText(string absoluteFilePath, XmlDocument csproj)
+        {
+            try 
+            {
+                csproj.Save(absoluteFilePath);
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                throw;
+            }
+
             return absoluteFilePath;
         }
     }
