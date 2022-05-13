@@ -8,6 +8,11 @@ namespace Cake.AssemblyInfoSetter
     [CakeAliasCategory("AssemblyInfoSetter")]
     public static class AssemblyInfoSetter
     {
+        public static string[] AllowedExtensions = new string[] {
+            ".cs",
+            ".csproj"
+        };
+        
         [CakeMethodAlias]
         public static FilePath[] SetAssemblyInfo(this ICakeContext context, string globPattern, AssemblyInfoProperties properties)
         {
@@ -16,9 +21,24 @@ namespace Cake.AssemblyInfoSetter
             var results = new ConcurrentBag<FilePath>();
 
             Parallel.ForEach (files, file => {
-                var replacer = new AssemblyInfoReplacer(context, file.FullPath, properties);
-                var fileReplacementPath = replacer.Replace();
-                results.Add(fileReplacementPath);
+                if (!AllowedExtensions.Contains(file.GetExtension().ToString()))
+                {
+                    throw(new FormatException($"file format not supported: {file.FullPath}"));
+                }
+
+                if (file.GetExtension().ToString() == ".cs") 
+                {
+                    var replacer = new AssemblyInfoCsReplacer(context, file.FullPath, properties);
+                    var fileReplacementPath = replacer.Replace();
+                    results.Add(fileReplacementPath);
+                }
+
+                if (file.GetExtension().ToString() == ".csproj")
+                {
+                    var replacer = new AssemblyInfoCsprojReplacer(context, file.FullPath, properties);
+                    var fileReplacementPath = replacer.Replace();
+                    results.Add(fileReplacementPath);
+                }
             });
 
             return results.ToArray();
