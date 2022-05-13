@@ -52,16 +52,17 @@ namespace Cake.AssemblyInfoSetter
             return assemblyInfoText;
         }
 
-        public FilePath Replace () {
+        public string Replace () 
+        {
             this.FileText = ReplaceProperties(this.FileText, this.PropertiesDictionary);
-            SetFileText(this.FilePath, this.FileText);
+            var path = SetFileText(this.FilePath, this.FileText);
             
-            return this.FilePath;
+            return path;
         }
 
         public string SetFileText(string absoluteFilePath, string FileText)
         {
-            File.WriteAllText(FileText, FileText);
+            File.WriteAllText(absoluteFilePath, FileText);
             return absoluteFilePath;
         }
     }
