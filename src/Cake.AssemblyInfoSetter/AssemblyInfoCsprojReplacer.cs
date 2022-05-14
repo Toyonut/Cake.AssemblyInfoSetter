@@ -24,9 +24,11 @@ namespace Cake.AssemblyInfoSetter
 
             foreach (var prop in properties.GetType().GetProperties())
             {
-                if (prop.GetValue(properties, null) is not null)
+                var value = prop.GetValue(properties, null);
+
+                if (value is not null)
                 {
-                    propertiesDictionary.Add(prop.ToString(), prop.GetValue(properties, null).ToString());
+                    propertiesDictionary.Add(prop.Name, value.ToString()!);
                 }
             }
 
