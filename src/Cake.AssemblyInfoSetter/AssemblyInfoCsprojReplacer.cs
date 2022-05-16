@@ -1,6 +1,5 @@
 using Cake.Core;
 using Cake.Core.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace Cake.AssemblyInfoSetter
@@ -53,11 +52,33 @@ namespace Cake.AssemblyInfoSetter
 
         public XmlDocument ReplaceProperties(XmlDocument csproj, Dictionary<string, string> assemblyInfoProperties)
         {
-            foreach (var prop in assemblyInfoProperties)
+            var propertyGroup = csproj.SelectSingleNode("Project/PropertyGroup");            
+
+            if (propertyGroup != null)
             {
-                var propertyRegex = $@"\[assembly:\s+{prop.Key}\(\"".*\""\)\]";
-                var replacement = $@"[assembly: {prop.Key}(""{prop.Value}"")]";
+                foreach (var prop in PropertiesDictionary)
+                {
+                    var el = propertyGroup.SelectSingleNode(prop.Key);
+
+                    if (el == null)
+                    {
+                        var at = csproj.CreateElement(prop.Key);
+                        at.InnerText = prop.Value;
+
+                        propertyGroup.AppendChild(at);
+                    }
+                    else
+                    {
+                        el.InnerText = prop.Value;
+                    }
+                }
+                
+
             }
+            else
+            {
+                throw(new XmlException("node ProjectGroup not found, check your csproj format."));
+            }           
 
             return csproj;
         }
@@ -74,7 +95,7 @@ namespace Cake.AssemblyInfoSetter
         {
             try 
             {
-                csproj.Save(absoluteFilePath);
+                csproj.Save(Console.Out);
             }
             catch (System.IO.FileNotFoundException)
             {
