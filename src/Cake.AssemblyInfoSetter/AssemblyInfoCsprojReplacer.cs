@@ -1,5 +1,7 @@
 using Cake.Core;
+using Cake.Core.Diagnostics;
 using Cake.Core.IO;
+using Polly;
 using System.Xml;
 
 namespace Cake.AssemblyInfoSetter
@@ -9,10 +11,12 @@ namespace Cake.AssemblyInfoSetter
         public Dictionary<string, string> PropertiesDictionary;
         private string FilePath;
         public XmlDocument XmlCsproj;
+        public ICakeContext Context;
 
         public AssemblyInfoCsprojReplacer(ICakeContext context, FilePath filePath, AssemblyInfoProperties properties)
         {
-            FilePath = filePath.MakeAbsolute(context.Environment).ToString();
+            Context = context;
+            FilePath = filePath.MakeAbsolute(Context.Environment).ToString();
             XmlCsproj = LoadCsproj(FilePath);
             PropertiesDictionary = ConvertPropertiesToDictionary(properties);
         }
@@ -78,12 +82,12 @@ namespace Cake.AssemblyInfoSetter
             else
             {
                 throw(new XmlException("node ProjectGroup not found, check your csproj format."));
-            }           
+            }
 
             return csproj;
         }
 
-        public string Replace () 
+        public string Replace ()
         {
             this.XmlCsproj = ReplaceProperties(this.XmlCsproj, this.PropertiesDictionary);
             var path = SetFileText(this.FilePath, this.XmlCsproj);
@@ -93,14 +97,16 @@ namespace Cake.AssemblyInfoSetter
 
         public string SetFileText(string absoluteFilePath, XmlDocument csproj)
         {
-            try 
-            {
-                csproj.Save(Console.Out);
-            }
-            catch (System.IO.FileNotFoundException)
-            {
-                throw;
-            }
+            var retryPolicy = Policy
+                .Handle<System.IO.FileNotFoundException>()
+                .WaitAndRetry(retryCount: 5, sleepDurationProvider: _ => TimeSpan.FromMilliseconds(500), onRetry: (exception, retryCount) =>
+                {
+                    Context.Log.Verbose($"Retrying save to {absoluteFilePath}");
+                });
+
+            retryPolicy.Execute(() => {
+                csproj.Save(absoluteFilePath);
+            });
 
             return absoluteFilePath;
         }

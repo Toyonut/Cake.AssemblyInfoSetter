@@ -1,5 +1,7 @@
 using Cake.Core;
+using Cake.Core.Diagnostics;
 using Cake.Core.IO;
+using Polly;
 using System.Text.RegularExpressions;
 
 namespace Cake.AssemblyInfoSetter
@@ -9,10 +11,12 @@ namespace Cake.AssemblyInfoSetter
         public Dictionary<string, string> PropertiesDictionary;
         private string FilePath;
         public string FileText;
+        public ICakeContext Context;
 
         public AssemblyInfoCsReplacer(ICakeContext context, FilePath filePath, AssemblyInfoProperties properties)
         {
-            FilePath = filePath.MakeAbsolute(context.Environment).ToString();
+            Context = context;
+            FilePath = filePath.MakeAbsolute(Context.Environment).ToString();
             FileText = GetFileText(FilePath);
             PropertiesDictionary = ConvertPropertiesToDictionary(properties);
         }
@@ -62,7 +66,17 @@ namespace Cake.AssemblyInfoSetter
 
         public string SetFileText(string absoluteFilePath, string FileText)
         {
-            File.WriteAllText(absoluteFilePath, FileText);
+            var retryPolicy = Policy
+                .Handle<System.IO.FileNotFoundException>()
+                .WaitAndRetry(retryCount: 5, sleepDurationProvider: _ => TimeSpan.FromMilliseconds(500), onRetry: (exception, retryCount) =>
+                {
+                    Context.Log.Verbose($"Retrying save to {absoluteFilePath}");
+                });
+
+            retryPolicy.Execute(() => {
+                File.WriteAllText(absoluteFilePath, FileText);
+            });
+
             return absoluteFilePath;
         }
     }
