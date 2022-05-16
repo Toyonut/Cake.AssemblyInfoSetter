@@ -1,4 +1,4 @@
-var target = Argument("target", "Package");
+var target = Argument("target", "RunAll");
 var configuration = Argument("configuration", "Release");
 
 //////////////////////////////////////////////////////////////////////
@@ -8,35 +8,47 @@ var configuration = Argument("configuration", "Release");
 Task("Clean")
     .Does(() =>
     {
-        
+        CleanDirectory($"./src/Cake.AssemblyInfoSetter/bin/{configuration}");
+        CleanDirectory($"./tests/Cake.AssemblyInfoSetter.Tests/bin/{configuration}");
     });
 
 Task("Build")
     .Does(() =>
     {
-
+        DotNetBuild("./Cake.AssemblyInfoSetter.sln", new DotNetBuildSettings
+        {
+            Configuration = configuration,
+        });
     });
 
 Task("Test")
     .Does(() =>
     {
-
+        DotNetTest("./Cake.AssemblyInfoSetter.sln", new DotNetTestSettings
+        {
+            Configuration = configuration,
+            NoBuild = true,
+        });
     });
 
 Task("Package")
     .Does(() =>
     {
-
+        DotNetPack("./src/Cake.AssemblyInfoSetter/Cake.AssemblyInfoSetter.csproj", new DotNetPackSettings
+        {
+            Configuration =configuration,
+            OutputDirectory = "./output/"
+        });
     });
 
 Task("RunAll")
-    .DependsOn("Clean")
-    .DependsOn("Build")
-    .DependsOn("Test")
-    .DependsOn("Package")
+    .IsDependentOn("Clean")
+    .IsDependentOn("Build")
+    .IsDependentOn("Test")
+    .IsDependentOn("Package")
     .Does(() =>
     {
-        information("Build Complete")
+        Information("Build Complete");
     });
 
 
