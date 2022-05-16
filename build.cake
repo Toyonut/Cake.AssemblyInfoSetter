@@ -1,25 +1,45 @@
-#r "src/Cake.AssemblyInfoSetter/bin/Debug/net6.0/Cake.AssemblyInfoSetter.dll"
-
-var target = Argument("target", "Test");
+var target = Argument("target", "Package");
 var configuration = Argument("configuration", "Release");
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
 //////////////////////////////////////////////////////////////////////
 
+Task("Clean")
+    .Does(() =>
+    {
+        
+    });
+
+Task("Build")
+    .Does(() =>
+    {
+
+    });
+
 Task("Test")
     .Does(() =>
-{
-   var res = SetAssemblyInfo("**/AssemblyInfo.cs", new AssemblyInfoProperties () {
-       AssemblyFileVersion = "1.2.0.9",
-       AssemblyVersion = "1.2.0.9"
-   });
+    {
 
-   foreach (var r in res)
-   {
-       Information(r);
-   }
-});
+    });
+
+Task("Package")
+    .Does(() =>
+    {
+
+    });
+
+Task("RunAll")
+    .DependsOn("Clean")
+    .DependsOn("Build")
+    .DependsOn("Test")
+    .DependsOn("Package")
+    .Does(() =>
+    {
+        information("Build Complete")
+    });
+
+
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
