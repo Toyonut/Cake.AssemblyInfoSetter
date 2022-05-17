@@ -18,24 +18,7 @@ namespace Cake.AssemblyInfoSetter
             Context = context;
             FilePath = filePath;
             XmlCsproj = LoadCsproj(FilePath);
-            PropertiesDictionary = ConvertPropertiesToDictionary(properties);
-        }
-
-        public Dictionary<string, string> ConvertPropertiesToDictionary(AssemblyInfoProperties properties)
-        {
-            var propertiesDictionary = new Dictionary<string, string>();
-
-            foreach (var prop in properties.GetType().GetProperties())
-            {
-                var value = prop.GetValue(properties, null);
-
-                if (value is not null)
-                {
-                    propertiesDictionary.Add(prop.Name, value.ToString()!);
-                }
-            }
-
-            return propertiesDictionary;
+            PropertiesDictionary = properties.ConvertToDictionary();
         }
 
         public XmlDocument LoadCsproj(string absoluteFilePath)
@@ -76,8 +59,6 @@ namespace Cake.AssemblyInfoSetter
                         el.InnerText = prop.Value;
                     }
                 }
-                
-
             }
             else
             {

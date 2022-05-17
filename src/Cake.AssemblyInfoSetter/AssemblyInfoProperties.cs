@@ -1,6 +1,6 @@
 namespace Cake.AssemblyInfoSetter
 {
-    public struct AssemblyInfoProperties
+    public class AssemblyInfoProperties
     {
         public string? AssemblyTitle {get; set;}
         public string? AssemblyCompany {get; set;}
@@ -10,5 +10,22 @@ namespace Cake.AssemblyInfoSetter
         public string? AssemblyInformationalVersion {get; set;}
         public string? AssemblyProduct {get; set;}
         public string? AssemblyTrademark {get; set;}
+
+        public Dictionary<string, string> ConvertToDictionary()
+        {
+            var propertiesDictionary = new Dictionary<string, string>();
+
+            foreach (var prop in this.GetType().GetProperties())
+            {
+                var value = prop.GetValue(this, null);
+
+                if (value is not null)
+                {
+                    propertiesDictionary.Add(prop.Name, value.ToString()!);
+                }
+            }
+
+            return propertiesDictionary;
+        }
     }
 }
