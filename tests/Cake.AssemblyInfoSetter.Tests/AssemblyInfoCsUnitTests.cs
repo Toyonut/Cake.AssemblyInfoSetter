@@ -10,7 +10,7 @@ namespace Cake.AssemblyInfoSetter.Tests;
 [TestClass]
 public class AssemblyInfoCsUnitTests
 {
-    public AssemblyInfoCsprojReplacer csprojReplacer;
+    public AssemblyInfoCsReplacer csReplacer;
     public AssemblyInfoProperties properties;
     public string filePath;
     Mock<ICakeContext> cakeContextMock;
@@ -32,133 +32,126 @@ public class AssemblyInfoCsUnitTests
         };
         // Step out of the bin/Release/net6.0 directory
         var workDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
-        filePath = Path.GetFullPath($"{workDir}/testfiles/test.project.csproj");
-        csprojReplacer = new AssemblyInfoCsprojReplacer (cakeContextMock.Object, filePath, properties);
+        filePath = Path.GetFullPath($"{workDir}/testfiles/assemblyinfo.cs.txt");
+        csReplacer = new AssemblyInfoCsReplacer (cakeContextMock.Object, filePath, properties);
     }
 
     [TestMethod]
-    public void ShouldAddPropertyFromDictionary()
+    public void ShouldReplacePropertyFromDictionaryAssemblyInfoCs()
     {
-        var initialDoc = @"
-            <Project Sdk=""Microsoft.NET.Sdk"">
-            <PropertyGroup>
-                <TargetFramework>net6.0</TargetFramework>
-                <ImplicitUsings>enable</ImplicitUsings>
-                <Nullable>enable</Nullable>
-                <PublishSingleFile>true</PublishSingleFile>
-                <SelfContained>true</SelfContained>
-            </PropertyGroup>
-            </Project>
+        var initialAssemblyInfo = @"
+            using System.Reflection;
+            using System.Runtime.InteropServices;
+            using System.Runtime.Serialization;
+
+            // General Information about an assembly is controlled through the following 
+            // set of attributes. Change these attribute values to modify the information
+            // associated with an assembly.
+            [assembly: AssemblyTitle(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyDescription("""")]
+            [assembly: AssemblyConfiguration("""")]
+            [assembly: AssemblyCompany(""My Company"")]
+            [assembly: AssemblyProduct(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyCopyright(""Copyright ©  2010"")]
+            [assembly: AssemblyTrademark("""")]
+            [assembly: AssemblyCulture("""")]
+            // You can specify all the values or you can default the Build and Revision Numbers 
+            // by using the '*' as shown below:
+            // [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyFileVersion(""1.1.0.9"")]
         ";
         
-        var expectedValue = "1.0.0.0";
 
         var propertiesDict = new Dictionary<string, string> () {
             {"AssemblyFileVersion", "1.0.0.0"}
         };
 
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+        var expectedAssemblyInfo = @"
+            using System.Reflection;
+            using System.Runtime.InteropServices;
+            using System.Runtime.Serialization;
 
-        Assert.AreEqual(expectedValue, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
+            // General Information about an assembly is controlled through the following 
+            // set of attributes. Change these attribute values to modify the information
+            // associated with an assembly.
+            [assembly: AssemblyTitle(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyDescription("""")]
+            [assembly: AssemblyConfiguration("""")]
+            [assembly: AssemblyCompany(""My Company"")]
+            [assembly: AssemblyProduct(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyCopyright(""Copyright ©  2010"")]
+            [assembly: AssemblyTrademark("""")]
+            [assembly: AssemblyCulture("""")]
+            // You can specify all the values or you can default the Build and Revision Numbers 
+            // by using the '*' as shown below:
+            // [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyFileVersion(""1.0.0.0"")]
+        ";
+        
+        var replacedAssemblyInfo = csReplacer.ReplaceProperties(initialAssemblyInfo, propertiesDict);
+
+        Assert.AreEqual(replacedAssemblyInfo, expectedAssemblyInfo);
     }
 
     [TestMethod]
-    public void ShouldAddMultiplePropertiesFromDictionary()
+    public void ShouldReplaceMultiplePropertiesFromDictionaryAssemblyInfoCs()
     {
-        var initialDoc = @"
-            <Project Sdk=""Microsoft.NET.Sdk"">
-            <PropertyGroup>
-                <TargetFramework>net6.0</TargetFramework>
-                <ImplicitUsings>enable</ImplicitUsings>
-                <Nullable>enable</Nullable>
-                <PublishSingleFile>true</PublishSingleFile>
-                <SelfContained>true</SelfContained>
-            </PropertyGroup>
-            </Project>
+        var initialAssemblyInfo = @"
+            using System.Reflection;
+            using System.Runtime.InteropServices;
+            using System.Runtime.Serialization;
+
+            // General Information about an assembly is controlled through the following 
+            // set of attributes. Change these attribute values to modify the information
+            // associated with an assembly.
+            [assembly: AssemblyTitle(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyDescription("""")]
+            [assembly: AssemblyConfiguration("""")]
+            [assembly: AssemblyCompany(""Not My Company"")]
+            [assembly: AssemblyProduct(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyCopyright(""Copyright ©  2010"")]
+            [assembly: AssemblyTrademark("""")]
+            [assembly: AssemblyCulture("""")]
+            // You can specify all the values or you can default the Build and Revision Numbers 
+            // by using the '*' as shown below:
+            // [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyFileVersion(""1.1.0.9"")]
         ";
         
 
         var propertiesDict = new Dictionary<string, string> () {
             {"AssemblyFileVersion", "1.0.0.0"},
-            {"AssemblyTitle", "My Company"},
+            {"AssemblyCompany", "My Company"},
         };
-        var expectedValueTitle = "My Company";
-        var expectedValueFileVersion = "1.0.0.0";
 
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+        var expectedAssemblyInfo = @"
+            using System.Reflection;
+            using System.Runtime.InteropServices;
+            using System.Runtime.Serialization;
 
-        Assert.AreEqual(expectedValueFileVersion, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
-        Assert.AreEqual(expectedValueTitle, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyTitle").InnerXml);
-    }
-    [TestMethod]
-    public void ShouldReplacePropertyFromDictionary()
-    {
-        var initialDoc = @"
-            <Project Sdk=""Microsoft.NET.Sdk"">
-            <PropertyGroup>
-                <TargetFramework>net6.0</TargetFramework>
-                <ImplicitUsings>enable</ImplicitUsings>
-                <Nullable>enable</Nullable>
-                <PublishSingleFile>true</PublishSingleFile>
-                <SelfContained>true</SelfContained>
-                <AssemblyFileVersion>0.0.0.3</AssemblyFileVersion>
-            </PropertyGroup>
-            </Project>
+            // General Information about an assembly is controlled through the following 
+            // set of attributes. Change these attribute values to modify the information
+            // associated with an assembly.
+            [assembly: AssemblyTitle(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyDescription("""")]
+            [assembly: AssemblyConfiguration("""")]
+            [assembly: AssemblyCompany(""My Company"")]
+            [assembly: AssemblyProduct(""ServiceStack.Examples.ServiceModel"")]
+            [assembly: AssemblyCopyright(""Copyright ©  2010"")]
+            [assembly: AssemblyTrademark("""")]
+            [assembly: AssemblyCulture("""")]
+            // You can specify all the values or you can default the Build and Revision Numbers 
+            // by using the '*' as shown below:
+            // [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyVersion(""1.7.0.6"")]
+            [assembly: AssemblyFileVersion(""1.0.0.0"")]
         ";
         
+        var replacedAssemblyInfo = csReplacer.ReplaceProperties(initialAssemblyInfo, propertiesDict);
 
-        var propertiesDict = new Dictionary<string, string> () {
-            {"AssemblyFileVersion", "1.0.0.0"},
-            {"AssemblyTitle", "My Company"},
-        };
-        var expectedValueTitle = "My Company";
-        var expectedValueFileVersion = "1.0.0.0";
-
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
-
-        Assert.AreEqual(expectedValueFileVersion, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
-    }
-
-    [TestMethod]
-    public void ShouldReplaceMultiplePropertiesFromDictionary()
-    {
-        var initialDoc = @"
-            <Project Sdk=""Microsoft.NET.Sdk"">
-            <PropertyGroup>
-                <TargetFramework>net6.0</TargetFramework>
-                <ImplicitUsings>enable</ImplicitUsings>
-                <Nullable>enable</Nullable>
-                <PublishSingleFile>true</PublishSingleFile>
-                <SelfContained>true</SelfContained>
-                <AssemblyFileVersion>0.0.0.3</AssemblyFileVersion>
-                <AssemblyTitle>Not My Company</AssemblyTitle>
-            </PropertyGroup>
-            </Project>
-        ";
-        
-
-        var propertiesDict = new Dictionary<string, string> () {
-            {"AssemblyFileVersion", "1.0.0.0"},
-            {"AssemblyTitle", "My Company"},
-        };
-        var expectedValueTitle = "My Company";
-        var expectedValueFileVersion = "1.0.0.0";
-
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
-
-        Assert.AreEqual(expectedValueFileVersion, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
-        Assert.AreEqual(expectedValueTitle, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyTitle").InnerXml);
+        Assert.AreEqual(replacedAssemblyInfo, expectedAssemblyInfo);
     }
 }
