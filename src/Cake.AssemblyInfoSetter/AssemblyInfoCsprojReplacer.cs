@@ -54,13 +54,13 @@ namespace Cake.AssemblyInfoSetter
             return doc;
         }
 
-        public XmlDocument ReplaceProperties(XmlDocument csproj, Dictionary<string, string> assemblyInfoProperties)
+        public XmlDocument ReplaceProperties(XmlDocument csproj, Dictionary<string, string> assemblyInfoPropertiesDict)
         {
             var propertyGroup = csproj.SelectSingleNode("Project/PropertyGroup");            
 
             if (propertyGroup != null)
             {
-                foreach (var prop in PropertiesDictionary)
+                foreach (var prop in assemblyInfoPropertiesDict)
                 {
                     var el = propertyGroup.SelectSingleNode(prop.Key);
 
