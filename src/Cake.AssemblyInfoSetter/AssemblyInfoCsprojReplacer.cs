@@ -13,10 +13,10 @@ namespace Cake.AssemblyInfoSetter
         public XmlDocument XmlCsproj;
         public ICakeContext Context;
 
-        public AssemblyInfoCsprojReplacer(ICakeContext context, FilePath filePath, AssemblyInfoProperties properties)
+        public AssemblyInfoCsprojReplacer(ICakeContext context, string filePath, AssemblyInfoProperties properties)
         {
             Context = context;
-            FilePath = filePath.MakeAbsolute(Context.Environment).ToString();
+            FilePath = filePath;
             XmlCsproj = LoadCsproj(FilePath);
             PropertiesDictionary = ConvertPropertiesToDictionary(properties);
         }
