@@ -4,11 +4,12 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>Cake.AssemblyInfoSetter</PackageId>
+    <Version>1.0.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cake.Core" Version="2.0.0" PrivateAssets="All" />
-    <PackageReference Include="Polly" Version="7.2.3" />
   </ItemGroup>
 
 </Project>
