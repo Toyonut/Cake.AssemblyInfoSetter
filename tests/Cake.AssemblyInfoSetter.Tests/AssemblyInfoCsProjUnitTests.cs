@@ -10,36 +10,37 @@ namespace Cake.AssemblyInfoSetter.Tests;
 [TestClass]
 public class AssemblyInfoCsProjUnitTests
 {
-    public AssemblyInfoCsprojReplacer csprojReplacer;
-    public AssemblyInfoProperties properties;
-    public string filePath;
-    Mock<ICakeContext> cakeContextMock;
-    Mock<ICakeArguments> cakeArgumentsMock;
-    Mock<ICakeEnvironment> cakeEnvironmentMock;
+	public AssemblyInfoCsprojReplacer csprojReplacer;
+	public AssemblyInfoProperties properties;
+	public string filePath;
+	Mock<ICakeContext> cakeContextMock;
+	Mock<ICakeArguments> cakeArgumentsMock;
+	Mock<ICakeEnvironment> cakeEnvironmentMock;
 
-    public AssemblyInfoCsProjUnitTests ()
-    {
-        cakeContextMock = new Mock<ICakeContext>();
-        cakeArgumentsMock = new Mock<ICakeArguments>();
-        cakeEnvironmentMock = new Mock<ICakeEnvironment>();
-        cakeContextMock.Setup(cakeContext => cakeContext.Arguments).Returns(cakeArgumentsMock.Object);
-        cakeContextMock.Setup(cakeContext => cakeContext.Environment).Returns(cakeEnvironmentMock.Object);
+	public AssemblyInfoCsProjUnitTests()
+	{
+		cakeContextMock = new Mock<ICakeContext>();
+		cakeArgumentsMock = new Mock<ICakeArguments>();
+		cakeEnvironmentMock = new Mock<ICakeEnvironment>();
+		cakeContextMock.Setup(cakeContext => cakeContext.Arguments).Returns(cakeArgumentsMock.Object);
+		cakeContextMock.Setup(cakeContext => cakeContext.Environment).Returns(cakeEnvironmentMock.Object);
 
-        properties = new AssemblyInfoProperties () {
-            AssemblyFileVersion = "1.1.0.4",
-            AssemblyVersion = "1.7.0.8",
-            AssemblyCompany = "My Company"
-        };
-        // Step out of the bin/Release/net6.0 directory
-        var workDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
-        filePath = Path.GetFullPath($"{workDir}/testfiles/assemblyinfo.csproj.txt");
-        csprojReplacer = new AssemblyInfoCsprojReplacer (cakeContextMock.Object, filePath, properties);
-    }
+		properties = new AssemblyInfoProperties()
+		{
+			AssemblyFileVersion = "1.1.0.4",
+			AssemblyVersion = "1.7.0.8",
+			AssemblyCompany = "My Company"
+		};
+		// Step out of the bin/Release/net6.0 directory
+		var workDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
+		filePath = Path.GetFullPath($"{workDir}/testfiles/assemblyinfo.csproj.txt");
+		csprojReplacer = new AssemblyInfoCsprojReplacer(cakeContextMock.Object, filePath, properties);
+	}
 
-    [TestMethod]
-    public void ShouldAddPropertyFromDictionaryCsproj()
-    {
-        var initialDoc = @"
+	[TestMethod]
+	public void ShouldAddPropertyFromDictionaryCsproj()
+	{
+		var initialDoc = @"
             <Project Sdk=""Microsoft.NET.Sdk"">
             <PropertyGroup>
                 <TargetFramework>net6.0</TargetFramework>
@@ -50,25 +51,27 @@ public class AssemblyInfoCsProjUnitTests
             </PropertyGroup>
             </Project>
         ";
-        
-        var expectedValue = "1.0.0.0";
 
-        var propertiesDict = new Dictionary<string, string> () {
-            {"AssemblyFileVersion", "1.0.0.0"}
-        };
+		var expectedValue = "1.0.0.0";
 
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var propertiesDict = new Dictionary<string, string>() {
+			{"AssemblyFileVersion", "1.0.0.0"}
+		};
 
-        Assert.AreEqual(expectedValue, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
-    }
+		var xmlInitial = new XmlDocument();
+		xmlInitial.LoadXml(initialDoc);
 
-    [TestMethod]
-    public void ShouldAddMultiplePropertiesFromDictionaryCsproj()
-    {
-        var initialDoc = @"
+		var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var actualValue = replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml;
+
+		Assert.IsNotNull(actualValue);
+		Assert.AreEqual(expectedValue, actualValue);
+	}
+
+	[TestMethod]
+	public void ShouldAddMultiplePropertiesFromDictionaryCsproj()
+	{
+		var initialDoc = @"
             <Project Sdk=""Microsoft.NET.Sdk"">
             <PropertyGroup>
                 <TargetFramework>net6.0</TargetFramework>
@@ -79,27 +82,31 @@ public class AssemblyInfoCsProjUnitTests
             </PropertyGroup>
             </Project>
         ";
-        
 
-        var propertiesDict = new Dictionary<string, string> () {
-            {"AssemblyFileVersion", "1.0.0.0"},
-            {"AssemblyTitle", "My Company"},
-        };
-        var expectedValueTitle = "My Company";
-        var expectedValueFileVersion = "1.0.0.0";
 
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var propertiesDict = new Dictionary<string, string>() {
+			{"AssemblyFileVersion", "1.0.0.0"},
+			{"AssemblyTitle", "My Company"},
+		};
+		var expectedValueAssemblyTitle = "My Company";
+		var expectedValueAssemblyFileVersion = "1.0.0.0";
 
-        Assert.AreEqual(expectedValueFileVersion, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
-        Assert.AreEqual(expectedValueTitle, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyTitle").InnerXml);
-    }
-    [TestMethod]
-    public void ShouldReplacePropertyFromDictionaryCsproj()
-    {
-        var initialDoc = @"
+		var xmlInitial = new XmlDocument();
+		xmlInitial.LoadXml(initialDoc);
+
+		var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var actualValueAssemblyFileVersion = replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml;
+		var actualValueAssemblyTitle = replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyTitle").InnerXml;
+
+		Assert.IsNotNull(actualValueAssemblyFileVersion);
+		Assert.AreEqual(expectedValueAssemblyFileVersion, actualValueAssemblyFileVersion);
+		Assert.IsNotNull(actualValueAssemblyTitle);
+		Assert.AreEqual(expectedValueAssemblyTitle, actualValueAssemblyTitle);
+	}
+	[TestMethod]
+	public void ShouldReplacePropertyFromDictionaryCsproj()
+	{
+		var initialDoc = @"
             <Project Sdk=""Microsoft.NET.Sdk"">
             <PropertyGroup>
                 <TargetFramework>net6.0</TargetFramework>
@@ -111,27 +118,28 @@ public class AssemblyInfoCsProjUnitTests
             </PropertyGroup>
             </Project>
         ";
-        
 
-        var propertiesDict = new Dictionary<string, string> () {
-            {"AssemblyFileVersion", "1.0.0.0"},
-            {"AssemblyTitle", "My Company"},
-        };
-        var expectedValueTitle = "My Company";
-        var expectedValueFileVersion = "1.0.0.0";
 
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var propertiesDict = new Dictionary<string, string>() {
+			{"AssemblyFileVersion", "1.0.0.0"},
+			{"AssemblyTitle", "My Company"},
+		};
+		var expectedValueAssemblyFileVersion = "1.0.0.0";
 
-        Assert.AreEqual(expectedValueFileVersion, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
-    }
+		var xmlInitial = new XmlDocument();
+		xmlInitial.LoadXml(initialDoc);
 
-    [TestMethod]
-    public void ShouldReplaceMultiplePropertiesFromDictionaryCsproj()
-    {
-        var initialDoc = @"
+		var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var actualValueAssemblyFileVersion = replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml;
+
+		Assert.IsNotNull(actualValueAssemblyFileVersion);
+		Assert.AreEqual(expectedValueAssemblyFileVersion, actualValueAssemblyFileVersion);
+	}
+
+	[TestMethod]
+	public void ShouldReplaceMultiplePropertiesFromDictionaryCsproj()
+	{
+		var initialDoc = @"
             <Project Sdk=""Microsoft.NET.Sdk"">
             <PropertyGroup>
                 <TargetFramework>net6.0</TargetFramework>
@@ -144,21 +152,25 @@ public class AssemblyInfoCsProjUnitTests
             </PropertyGroup>
             </Project>
         ";
-        
 
-        var propertiesDict = new Dictionary<string, string> () {
-            {"AssemblyFileVersion", "1.0.0.0"},
-            {"AssemblyTitle", "My Company"},
-        };
-        var expectedValueTitle = "My Company";
-        var expectedValueFileVersion = "1.0.0.0";
 
-        var xmlInitial = new XmlDocument();
-        xmlInitial.LoadXml(initialDoc);
-        
-        var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var propertiesDict = new Dictionary<string, string>() {
+			{"AssemblyFileVersion", "1.0.0.0"},
+			{"AssemblyTitle", "My Company"},
+		};
+		var expectedValueAssemblyTitle = "My Company";
+		var expectedValueAssemblyFileVersion = "1.0.0.0";
 
-        Assert.AreEqual(expectedValueFileVersion, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml);
-        Assert.AreEqual(expectedValueTitle, replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyTitle").InnerXml);
-    }
+		var xmlInitial = new XmlDocument();
+		xmlInitial.LoadXml(initialDoc);
+
+		var replacedXml = csprojReplacer.ReplaceProperties(xmlInitial, propertiesDict);
+		var actualValueAssemblyFileVersion = replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyFileVersion").InnerXml;
+		var actualValueAssemblyTitle = replacedXml.SelectSingleNode("Project/PropertyGroup/AssemblyTitle").InnerXml;
+
+		Assert.IsNotNull(actualValueAssemblyFileVersion);
+		Assert.AreEqual(expectedValueAssemblyFileVersion, actualValueAssemblyFileVersion);
+		Assert.IsNotNull(actualValueAssemblyTitle);
+		Assert.AreEqual(expectedValueAssemblyTitle, actualValueAssemblyTitle);
+	}
 }
