@@ -1,5 +1,6 @@
 var target = Argument("target", "RunAll");
 var configuration = Argument("configuration", "Release");
+var version = EnvironmentVariable<string>("VERSION", "1.0.0.0");
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -10,6 +11,7 @@ Task("Clean")
     {
         CleanDirectory($"./src/Cake.AssemblyInfoSetter/bin/{configuration}");
         CleanDirectory($"./tests/Cake.AssemblyInfoSetter.Tests/bin/{configuration}");
+        CleanDirectory($"./output");
     });
 
 Task("Build")
@@ -18,6 +20,11 @@ Task("Build")
         DotNetBuild("./Cake.AssemblyInfoSetter.sln", new DotNetBuildSettings
         {
             Configuration = configuration,
+            MSBuildSettings = new DotNetMSBuildSettings {
+                AssemblyVersion = version,
+                FileVersion = version,
+                Version = version,
+            }
         });
     });
 
@@ -37,7 +44,12 @@ Task("Package")
         DotNetPack("./src/Cake.AssemblyInfoSetter/Cake.AssemblyInfoSetter.csproj", new DotNetPackSettings
         {
             Configuration =configuration,
-            OutputDirectory = "./output/"
+            OutputDirectory = "./output/",
+            MSBuildSettings = new DotNetMSBuildSettings {
+                AssemblyVersion = version,
+                FileVersion = version,
+                Version = version,
+            }
         });
     });
 
@@ -50,8 +62,6 @@ Task("RunAll")
     {
         Information("Build Complete");
     });
-
-
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
