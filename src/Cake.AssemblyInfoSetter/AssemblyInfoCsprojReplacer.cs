@@ -5,75 +5,75 @@ using System.Xml;
 
 namespace Cake.AssemblyInfoSetter
 {
-    public class AssemblyInfoCsprojReplacer
-    {
-        public Dictionary<string, string> PropertiesDictionary;
-        private string FilePath;
-        public XmlDocument XmlCsproj;
-        public ICakeContext Context;
+	public class AssemblyInfoCsprojReplacer
+	{
+		public Dictionary<string, string> PropertiesDictionary;
+		private string FilePath;
+		public XmlDocument XmlCsproj;
+		public ICakeContext Context;
 
-        public AssemblyInfoCsprojReplacer(ICakeContext context, string filePath, AssemblyInfoProperties properties)
-        {
-            Context = context;
-            FilePath = filePath;
-            XmlCsproj = LoadCsproj(FilePath);
-            PropertiesDictionary = properties.ConvertToDictionary();
-        }
+		public AssemblyInfoCsprojReplacer(ICakeContext context, string filePath, AssemblyInfoProperties properties)
+		{
+			Context = context;
+			FilePath = filePath;
+			XmlCsproj = LoadCsproj(FilePath);
+			PropertiesDictionary = properties.ConvertToDictionary();
+		}
 
-        public XmlDocument LoadCsproj(string absoluteFilePath)
-        {
-            var doc = new XmlDocument();
+		public XmlDocument LoadCsproj(string absoluteFilePath)
+		{
+			var doc = new XmlDocument();
 
-            try 
-            {
-                doc.Load(absoluteFilePath); 
-            }
-            catch (System.IO.FileNotFoundException)
-            {
-                throw;
-            }
-            
-            return doc;
-        }
+			try
+			{
+				doc.Load(absoluteFilePath);
+			}
+			catch (System.IO.FileNotFoundException)
+			{
+				throw;
+			}
 
-        public XmlDocument ReplaceProperties(XmlDocument csproj, Dictionary<string, string> assemblyInfoPropertiesDict)
-        {
-            var propertyGroup = csproj.SelectSingleNode("Project/PropertyGroup");            
+			return doc;
+		}
 
-            if (propertyGroup != null)
-            {
-                foreach (var prop in assemblyInfoPropertiesDict)
-                {
-                    var el = propertyGroup.SelectSingleNode(prop.Key);
+		public XmlDocument ReplaceProperties(XmlDocument csproj, Dictionary<string, string> assemblyInfoPropertiesDict)
+		{
+			var propertyGroup = csproj.SelectSingleNode("Project/PropertyGroup");
 
-                    if (el == null)
-                    {
-                        var at = csproj.CreateElement(prop.Key);
-                        at.InnerText = prop.Value;
+			if (propertyGroup != null)
+			{
+				foreach (var prop in assemblyInfoPropertiesDict)
+				{
+					var el = propertyGroup.SelectSingleNode(prop.Key);
 
-                        propertyGroup.AppendChild(at);
-                    }
-                    else
-                    {
-                        el.InnerText = prop.Value;
-                    }
-                }
-            }
-            else
-            {
-                throw(new XmlException("node ProjectGroup not found, check your csproj format."));
-            }
+					if (el == null)
+					{
+						var at = csproj.CreateElement(prop.Key);
+						at.InnerText = prop.Value;
 
-            return csproj;
-        }
+						propertyGroup.AppendChild(at);
+					}
+					else
+					{
+						el.InnerText = prop.Value;
+					}
+				}
+			}
+			else
+			{
+				throw (new XmlException("node ProjectGroup not found, check your csproj format."));
+			}
 
-        public string Replace ()
-        {
-            this.XmlCsproj = ReplaceProperties(this.XmlCsproj, this.PropertiesDictionary);
-            var path = SetFileText(this.FilePath, this.XmlCsproj);
-            
-            return path;
-        }
+			return csproj;
+		}
+
+		public string Replace()
+		{
+			this.XmlCsproj = ReplaceProperties(this.XmlCsproj, this.PropertiesDictionary);
+			var path = SetFileText(this.FilePath, this.XmlCsproj);
+
+			return path;
+		}
 
 		public string SetFileText(string absoluteFilePath, XmlDocument csproj)
 		{

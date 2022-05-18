@@ -1,30 +1,29 @@
 using Cake.Core;
 using Cake.Core.Diagnostics;
 using Cake.Core.IO;
-using Polly;
 using System.Text.RegularExpressions;
 
 namespace Cake.AssemblyInfoSetter
 {
-    public class AssemblyInfoCsReplacer
-    {
-        public Dictionary<string, string> PropertiesDictionary;
-        private string FilePath;
-        public string FileText;
-        public ICakeContext Context;
+	public class AssemblyInfoCsReplacer
+	{
+		public Dictionary<string, string> PropertiesDictionary;
+		private string FilePath;
+		public string FileText;
+		public ICakeContext Context;
 
-        public AssemblyInfoCsReplacer(ICakeContext context, FilePath filePath, AssemblyInfoProperties properties)
-        {
-            Context = context;
-            FilePath = filePath.MakeAbsolute(Context.Environment).ToString();
-            FileText = GetFileText(FilePath);
-            PropertiesDictionary = properties.ConvertToDictionary();
-        }
+		public AssemblyInfoCsReplacer(ICakeContext context, FilePath filePath, AssemblyInfoProperties properties)
+		{
+			Context = context;
+			FilePath = filePath.MakeAbsolute(Context.Environment).ToString();
+			FileText = GetFileText(FilePath);
+			PropertiesDictionary = properties.ConvertToDictionary();
+		}
 
-        public string GetFileText(string absoluteFilePath)
-        {
-            return File.ReadAllText(absoluteFilePath);
-        }
+		public string GetFileText(string absoluteFilePath)
+		{
+			return File.ReadAllText(absoluteFilePath);
+		}
 
 		public string ReplaceProperties(string assemblyInfoText, Dictionary<string, string> assemblyInfoProperties)
 		{
@@ -36,16 +35,16 @@ namespace Cake.AssemblyInfoSetter
 				assemblyInfoText = Regex.Replace(assemblyInfoText, propertyRegex, replacement, RegexOptions.Multiline);
 			}
 
-            return assemblyInfoText;
-        }
+			return assemblyInfoText;
+		}
 
-        public string Replace () 
-        {
-            this.FileText = ReplaceProperties(this.FileText, this.PropertiesDictionary);
-            var path = SetFileText(this.FilePath, this.FileText);
-            
-            return path;
-        }
+		public string Replace()
+		{
+			this.FileText = ReplaceProperties(this.FileText, this.PropertiesDictionary);
+			var path = SetFileText(this.FilePath, this.FileText);
+
+			return path;
+		}
 
 		public string SetFileText(string absoluteFilePath, string FileText)
 		{
