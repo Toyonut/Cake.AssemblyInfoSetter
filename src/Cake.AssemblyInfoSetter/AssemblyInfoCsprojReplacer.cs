@@ -1,7 +1,6 @@
 using Cake.Core;
 using Cake.Core.Diagnostics;
 using Cake.Core.IO;
-using Polly;
 using System.Xml;
 
 namespace Cake.AssemblyInfoSetter
@@ -76,20 +75,28 @@ namespace Cake.AssemblyInfoSetter
             return path;
         }
 
-        public string SetFileText(string absoluteFilePath, XmlDocument csproj)
-        {
-            var retryPolicy = Policy
-                .Handle<System.IO.FileNotFoundException>()
-                .WaitAndRetry(retryCount: 5, sleepDurationProvider: _ => TimeSpan.FromMilliseconds(500), onRetry: (exception, retryCount) =>
-                {
-                    Context.Log.Verbose($"Retrying save to {absoluteFilePath}");
-                });
+		public string SetFileText(string absoluteFilePath, XmlDocument csproj)
+		{
+			var tries = 5;
+			while (true)
+			{
+				try
+				{
+					csproj.Save(absoluteFilePath);
+					break; // success!
+				}
+				catch
+				{
+					if (--tries == 0)
+					{
+						throw;
+					}
+					Thread.Sleep(500);
+				}
+				Context.Log.Verbose($"Retrying save to {absoluteFilePath}");
+			}
 
-            retryPolicy.Execute(() => {
-                csproj.Save(absoluteFilePath);
-            });
-
-            return absoluteFilePath;
-        }
-    }
+			return absoluteFilePath;
+		}
+	}
 }

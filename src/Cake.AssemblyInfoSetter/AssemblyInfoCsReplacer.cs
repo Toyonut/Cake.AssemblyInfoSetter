@@ -47,20 +47,28 @@ namespace Cake.AssemblyInfoSetter
             return path;
         }
 
-        public string SetFileText(string absoluteFilePath, string FileText)
-        {
-            var retryPolicy = Policy
-                .Handle<System.IO.FileNotFoundException>()
-                .WaitAndRetry(retryCount: 5, sleepDurationProvider: _ => TimeSpan.FromMilliseconds(500), onRetry: (exception, retryCount) =>
-                {
-                    Context.Log.Verbose($"Retrying save to {absoluteFilePath}");
-                });
+		public string SetFileText(string absoluteFilePath, string FileText)
+		{
+			var tries = 5;
+			while (true)
+			{
+				try
+				{
+					File.WriteAllText(absoluteFilePath, FileText);
+					break; // success!
+				}
+				catch
+				{
+					if (--tries == 0)
+					{
+						throw;
+					}
+					Thread.Sleep(500);
+				}
+				Context.Log.Verbose($"Retrying save to {absoluteFilePath}");
+			}
 
-            retryPolicy.Execute(() => {
-                File.WriteAllText(absoluteFilePath, FileText);
-            });
-
-            return absoluteFilePath;
-        }
-    }
+			return absoluteFilePath;
+		}
+	}
 }
