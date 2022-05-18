@@ -26,15 +26,15 @@ namespace Cake.AssemblyInfoSetter
             return File.ReadAllText(absoluteFilePath);
         }
 
-        public string ReplaceProperties(string assemblyInfoText, Dictionary<string, string> assemblyInfoProperties)
-        {
-            foreach (var prop in assemblyInfoProperties)
-            {
-                var propertyRegex = $@"\[assembly:\s+{prop.Key}\(\"".*\""\)\]";
-                var replacement = $@"[assembly: {prop.Key}(""{prop.Value}"")]";
+		public string ReplaceProperties(string assemblyInfoText, Dictionary<string, string> assemblyInfoProperties)
+		{
+			foreach (var prop in assemblyInfoProperties)
+			{
+				var propertyRegex = $@"^\[assembly:\s+{prop.Key}\(\"".*\""\)\]";
+				var replacement = $@"[assembly: {prop.Key}(""{prop.Value}"")]";
 
-                assemblyInfoText = Regex.Replace(assemblyInfoText, propertyRegex, replacement);
-            }
+				assemblyInfoText = Regex.Replace(assemblyInfoText, propertyRegex, replacement, RegexOptions.Multiline);
+			}
 
             return assemblyInfoText;
         }
