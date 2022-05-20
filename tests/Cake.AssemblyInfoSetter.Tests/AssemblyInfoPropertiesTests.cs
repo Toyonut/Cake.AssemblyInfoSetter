@@ -25,9 +25,9 @@ public class AssemblyInfoPropertiesTests
 
 		var propertiesDictActual = properties.ConvertToDictionary();
 
+		Assert.AreEqual(propertiesDictExpected.Count, propertiesDictActual.Count);
 		Assert.AreEqual(propertiesDictExpected["AssemblyFileVersion"], propertiesDictActual["AssemblyFileVersion"]);
 		Assert.AreEqual(propertiesDictExpected["AssemblyVersion"], propertiesDictActual["AssemblyVersion"]);
 		Assert.AreEqual(propertiesDictExpected["AssemblyCompany"], propertiesDictActual["AssemblyCompany"]);
-		Assert.AreEqual(propertiesDictExpected, propertiesDictExpected);
 	}
 }
